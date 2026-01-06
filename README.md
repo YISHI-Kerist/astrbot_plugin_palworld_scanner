@@ -1,8 +1,8 @@
-# helloworld
+# 帕鲁服务器检测
 
 AstrBot 插件模板
 
-A template plugin for AstrBot plugin feature
+用于查看帕鲁服务器的状态，并返回给astrbot的简单插件
 
 # 支持
 
