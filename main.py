@@ -65,7 +65,6 @@ def format_output(show_health=False, ping_threshold=100):
     text.append(f"在线玩家数：{len(players)}")
     uptime_sec = metrics.get("uptime", 0)
     text.append(f"运行时长：{uptime_sec // 3600}h {(uptime_sec % 3600) // 60}m")
-    text.append(f"TPS: {metrics.get('tickRate', '未知')}  CPU: {metrics.get('cpu', '未知')}%  内存: {metrics.get('memory', '未知')}MB\n")
 
     # 玩家信息
     text.append("👥 在线玩家详情")
@@ -89,6 +88,11 @@ def format_output(show_health=False, ping_threshold=100):
     text.append("\nℹ 数据来源：REST API，可能存在数秒延迟")
     return "\n".join(text)
 
+parser = argparse.ArgumentParser(description="Palworld REST API 服务器状态查询")
+parser.add_argument("--show-health", action="store_true", help="显示玩家血量")
+parser.add_argument("--ping-threshold", type=int, default=100, help="Ping 超过阈值标记 ⚠️")
+args = parser.parse_args()
+
 @register("pal", "YourName", "一个简单的 palWorld 插件", "1.0.0")
 class MyPlugin(Star):
     def __init__(self, context: Context):
@@ -98,13 +102,15 @@ class MyPlugin(Star):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
 
     @filter.command("pal")
+    # —— 命令行参数 —— #
+
     async def pal(self, event: AstrMessageEvent):
-        """这是一个 hello world 指令"""
+        """这是一个 pal world 指令"""
         user_name = event.get_sender_name()
         message_chain = event.get_messages() 
         message_str = format_output(show_health=args.show_health, ping_threshold=args.ping_threshold)
         logger.info(message_chain)
-        yield event.plain_result(f"{user_name}=>{message_str}!") 
+        yield event.plain_result(f"你好，{user_name},你请求的服务器信息：\n{message_str}!") 
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
