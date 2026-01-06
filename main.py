@@ -54,14 +54,13 @@ def format_output(show_health=False, ping_threshold=100):
     except Exception as e:
         players = []
 
-    text = ["🦖 Palworld REST API 服务器状态\n"]
+    text = ["🦖 Palworld服务器状态\n"]
 
     # 基本信息
     text.append("🎮 服务器信息")
     text.append(f"名称：{info.get('servername')}")
     text.append(f"描述：{info.get('description')}")
     text.append(f"版本：{info.get('version')}")
-    text.append(f"最大玩家数：{info.get('maxPlayers', '未知')}")
     text.append(f"在线玩家数：{len(players)}")
     uptime_sec = metrics.get("uptime", 0)
     text.append(f"运行时长：{uptime_sec // 3600}h {(uptime_sec % 3600) // 60}m")
@@ -110,7 +109,7 @@ class MyPlugin(Star):
         message_chain = event.get_messages() 
         message_str = format_output(show_health=args.show_health, ping_threshold=args.ping_threshold)
         logger.info(message_chain)
-        yield event.plain_result(f"你好，{user_name},你请求的服务器信息：\n{message_str}!") 
+        yield event.plain_result(f"你好！{user_name} 你请求的服务器信息：\n{message_str}!") 
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
