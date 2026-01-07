@@ -13,6 +13,8 @@ REST_HOST = "http://139.155.69.131:8212"
 USERNAME = "admin"
 PASSWORD = "17191719"
 
+TOOL_VER = "1.0.0.1" # 这个脚本的版本号
+
 # Basic Auth 头
 auth_bytes = f"{USERNAME}:{PASSWORD}".encode("utf-8")
 auth_b64 = base64.b64encode(auth_bytes).decode("utf-8")
@@ -62,29 +64,34 @@ def format_output(ping_threshold=100):
     text.append(f"描述：{info.get('description')}")
     text.append(f"版本：{info.get('version')}")
     text.append(f"在线玩家数：{len(players)}")
+    text.append(f"这是帕鲁世界的第：{info.get('days')}天")
     uptime_sec = metrics.get("uptime", 0)
     text.append(f"运行时长：{uptime_sec // 3600}h {(uptime_sec % 3600) // 60}m")
 
     # 玩家信息
-    text.append("👥 在线玩家详情")
+    text.append("👥 在线玩家详情：")
     if not players:
         text.append("暂无玩家在线喵~")
     else:
         for p in players:
+            text.append("\n----------")
             name = p.get("name","未知玩家")
             lvl = p.get("level", 0)
             ping = p.get("ping", 0)
             ping_str = f"{ping:.1f}"   #用于ping值显示保留一位小数
             x = p.get("location_x", 0)
             y = p.get("location_y", 0)
+            x_str = f"{x:.2f}"
+            y_str = f"{y:.2f}"
             buildings = p.get("building_count",0)
 
-            high_ping = "⚠️" if ping > ping_threshold else ""
+            high_ping = "⚠️" if ping > ping_threshold else "✅"
             
-            line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping} 坐标:({x},{y}) 拥有建筑数量：{buildings}"
+            line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping}\n 坐标:({x_str},{y_str}) 拥有建筑数量：{buildings}"
             text.append(line)
-
-    text.append("\nℹ 数据来源：REST API，可能存在数秒延迟")
+    text.append("----------")
+    text.append(f"工具版本：{TOOL_VER}")
+    text.append("\nℹ 以上信息由巧克力色的小飞马Caramel为您播报~")
     return "\n".join(text)
 
 parser = argparse.ArgumentParser(description="Palworld REST API 服务器状态查询")
@@ -99,7 +106,7 @@ class MyPlugin(Star):
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
 
-    @filter.command("pal")
+    @filter.command(["pal", "帕鲁", "Pal", "PAL"])
     # —— 命令行参数 —— #
 
     async def pal(self, event: AstrMessageEvent):
@@ -108,7 +115,7 @@ class MyPlugin(Star):
         message_chain = event.get_messages() 
         message_str = format_output(ping_threshold=args.ping_threshold)
         logger.info(message_chain)
-        yield event.plain_result(f"你好！{user_name} 你请求的服务器信息：\n{message_str}!") 
+        yield event.plain_result(f"{message_str}!") 
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
