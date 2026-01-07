@@ -38,7 +38,7 @@ def get_player_list():
     return resp.json().get("players", [])
 
 # —— 文本生成 —— #
-def format_output(show_health=False, ping_threshold=100):
+def format_output(ping_threshold=100):
     try:
         info = get_server_info()
     except Exception as e:
@@ -68,27 +68,26 @@ def format_output(show_health=False, ping_threshold=100):
     # 玩家信息
     text.append("👥 在线玩家详情")
     if not players:
-        text.append("暂无玩家在线")
+        text.append("暂无玩家在线喵~")
     else:
         for p in players:
-            name = p.get("name")
+            name = p.get("name","未知玩家")
             lvl = p.get("level", 0)
             ping = p.get("ping", 0)
+            ping_str = f"{ping:.1f}"   #用于ping值显示保留一位小数
             x = p.get("location_x", 0)
             y = p.get("location_y", 0)
-            health = p.get("health", "未知") if show_health else None
+            buildings = p.get("building_count",0)
 
             high_ping = "⚠️" if ping > ping_threshold else ""
-            line = f"- {name} 等级:{lvl} Ping:{ping}{high_ping} 坐标:({x},{y})"
-            if show_health:
-                line += f" 血量:{health}"
+            
+            line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping} 坐标:({x},{y}) 拥有建筑数量：{buildings}"
             text.append(line)
 
     text.append("\nℹ 数据来源：REST API，可能存在数秒延迟")
     return "\n".join(text)
 
 parser = argparse.ArgumentParser(description="Palworld REST API 服务器状态查询")
-parser.add_argument("--show-health", action="store_true", help="显示玩家血量")
 parser.add_argument("--ping-threshold", type=int, default=100, help="Ping 超过阈值标记 ⚠️")
 args = parser.parse_args()
 
@@ -107,7 +106,7 @@ class MyPlugin(Star):
         """这是一个 pal world 指令"""
         user_name = event.get_sender_name()
         message_chain = event.get_messages() 
-        message_str = format_output(show_health=args.show_health, ping_threshold=args.ping_threshold)
+        message_str = format_output(ping_threshold=args.ping_threshold)
         logger.info(message_chain)
         yield event.plain_result(f"你好！{user_name} 你请求的服务器信息：\n{message_str}!") 
 
