@@ -13,6 +13,8 @@ REST_HOST = "http://139.155.69.131:8212"
 USERNAME = "admin"
 PASSWORD = "17191719"
 
+TOOL_VER = "1.0.0.1" # 这个脚本的版本号
+
 # Basic Auth 头
 auth_bytes = f"{USERNAME}:{PASSWORD}".encode("utf-8")
 auth_b64 = base64.b64encode(auth_bytes).decode("utf-8")
@@ -88,7 +90,8 @@ def format_output(ping_threshold=100):
             line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping}\n 坐标:({x_str},{y_str}) 拥有建筑数量：{buildings}"
             text.append(line)
     text.append("----------")
-    text.append("\nℹ 以上由巧克力色的小飞马Caramel为您播报~")
+    text.append(f"工具版本：{TOOL_VER}")
+    text.append("\nℹ 以上信息由巧克力色的小飞马Caramel为您播报~")
     return "\n".join(text)
 
 parser = argparse.ArgumentParser(description="Palworld REST API 服务器状态查询")
