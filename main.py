@@ -37,7 +37,15 @@ def get_server_metrics():
 def get_player_list():
     url = f"{REST_HOST}/v1/api/players"
     resp = requests.get(url, headers=HEADERS, timeout=5)
-    return resp.json()
+    data = resp.json()
+
+    players = data.get("players", [])
+
+    if isinstance(players, dict):
+        players = list(players.values())
+
+    return players
+
 
 # —— 文本生成 —— #
 def format_output(ping_threshold=100):
