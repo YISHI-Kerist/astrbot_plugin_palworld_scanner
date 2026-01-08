@@ -20,7 +20,7 @@ auth_bytes = f"{USERNAME}:{PASSWORD}".encode("utf-8")
 auth_b64 = base64.b64encode(auth_bytes).decode("utf-8")
 HEADERS = {
     "Authorization": f"Basic {auth_b64}",
-    "Content-Type": "application/json"
+    "Accept": "application/json"
 }
 
 # —— REST API 查询 —— #
@@ -37,7 +37,7 @@ def get_server_metrics():
 def get_player_list():
     url = f"{REST_HOST}/v1/api/players"
     resp = requests.get(url, headers=HEADERS, timeout=5)
-    return resp.json().get("players", [])
+    return resp.json()
 
 # —— 文本生成 —— #
 def format_output(ping_threshold=100):
@@ -66,9 +66,16 @@ def format_output(ping_threshold=100):
     text.append(f"描述：{info.get('description')}")
     text.append(f"版本：{info.get('version')}")
     text.append(f"在线玩家数：{len(players)}")
-    text.append(f"这是帕鲁世界的第：{info.get('days')}天")
-    uptime_sec = metrics.get("uptime", 0)
-    text.append(f"运行时长：{uptime_sec // 3600}h {(uptime_sec % 3600) // 60}m")
+    days = metrics.get("days")
+    if days is None:
+        text.append("这是帕鲁世界的第：未知天")
+    else:
+        text.append(f"这是帕鲁世界的第：{days}天")
+    uptime_sec = metrics.get("uptime")
+    if uptime_sec is None:
+        text.append("运行时长：未知")
+    else:
+        text.append(f"运行时长：{uptime_sec // 3600}h {(uptime_sec % 3600) // 60}m")
 
     # 玩家信息
     text.append("👥 在线玩家详情：")
