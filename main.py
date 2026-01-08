@@ -100,11 +100,10 @@ def format_output(ping_threshold=100):
             y = p.get("location_y", 0)
             x_str = f"{x:.2f}"
             y_str = f"{y:.2f}"
-            buildings = p.get("building_count",0)
 
             high_ping = "⚠️" if ping > ping_threshold else "✅"
             
-            line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping}\n 坐标:({x_str},{y_str})\n拥有建筑数量：{buildings}"
+            line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping}\n 坐标:({x_str},{y_str})"
             text.append(line)
     text.append("----------")
     text.append(f"工具版本：{TOOL_VER}")
