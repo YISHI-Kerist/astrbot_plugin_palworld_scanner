@@ -13,7 +13,7 @@ REST_HOST = "http://139.155.69.131:8212"
 USERNAME = "admin"
 PASSWORD = "17191719"
 
-TOOL_VER = "1.0.0.1" # 这个脚本的版本号
+TOOL_VER = "1.0.0.2" # 这个脚本的版本号
 
 # Basic Auth 头
 auth_bytes = f"{USERNAME}:{PASSWORD}".encode("utf-8")
@@ -55,6 +55,8 @@ def format_output(ping_threshold=100):
         players = get_player_list()
     except Exception as e:
         players = []
+    
+    players.sort(key=lambda p: p.get("level",0),reverse=True)
 
     text = ["🦖 Palworld服务器状态\n"]
 
@@ -87,11 +89,11 @@ def format_output(ping_threshold=100):
 
             high_ping = "⚠️" if ping > ping_threshold else "✅"
             
-            line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping}\n 坐标:({x_str},{y_str}) 拥有建筑数量：{buildings}"
+            line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping}\n 坐标:({x_str},{y_str})\n拥有建筑数量：{buildings}"
             text.append(line)
     text.append("----------")
     text.append(f"工具版本：{TOOL_VER}")
-    text.append("\nℹ 以上信息由巧克力色的小飞马Caramel为您播报~")
+    text.append("\nℹ 以上信息由Caramel为您播报~")
     return "\n".join(text)
 
 parser = argparse.ArgumentParser(description="Palworld REST API 服务器状态查询")
@@ -106,7 +108,7 @@ class MyPlugin(Star):
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
 
-    @filter.command(["pal", "帕鲁", "Pal", "PAL"])
+    @filter.command("pal")
     # —— 命令行参数 —— #
 
     async def pal(self, event: AstrMessageEvent):
