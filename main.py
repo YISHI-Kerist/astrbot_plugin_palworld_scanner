@@ -1,10 +1,17 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
+from palworld_coord import sav_to_map, map_to_sav
 
+
+try:
+    from .paintPlayers import piantPlayersOnMap
+except ImportError:
+    from paintPlayers import piantPlayersOnMap
 import base64
 import requests
 import argparse
+import os
 
 
 
@@ -13,7 +20,7 @@ REST_HOST = "http://139.155.69.131:8212"
 USERNAME = "admin"
 PASSWORD = "17191719"
 
-TOOL_VER = "1.0.0.2" # 这个脚本的版本号
+TOOL_VER = "1.0.3" # 这个脚本的版本号
 
 # Basic Auth 头
 auth_bytes = f"{USERNAME}:{PASSWORD}".encode("utf-8")
@@ -48,7 +55,7 @@ def get_player_list():
 
 
 # —— 文本生成 —— #
-def format_output(ping_threshold=100):
+def format_output(ping_threshold=100, output_dir="."):
     try:
         info = get_server_info()
     except Exception as e:
@@ -90,14 +97,25 @@ def format_output(ping_threshold=100):
     if not players:
         text.append("暂无玩家在线喵~")
     else:
+        names = []
+        xs = []
+        ys = []
         for p in players:
             text.append("\n----------")
             name = p.get("name","未知玩家")
             lvl = p.get("level", 0)
             ping = p.get("ping", 0)
             ping_str = f"{ping:.1f}"   #用于ping值显示保留一位小数
-            x = p.get("location_x", 0)
-            y = p.get("location_y", 0)
+            apiX = p.get("location_x", 0)
+            apiY = p.get("location_y", 0)
+            map_point = sav_to_map(apiX, apiY)
+            x = map_point.x
+            y = map_point.y
+            
+            names.append(name)
+            xs.append(x)
+            ys.append(y)
+            
             x_str = f"{x:.2f}"
             y_str = f"{y:.2f}"
 
@@ -105,16 +123,23 @@ def format_output(ping_threshold=100):
             
             line = f"- {name} 等级:{lvl} Ping:{ping_str}{high_ping}\n 坐标:({x_str},{y_str})"
             text.append(line)
+        #使用指定的输出目录
+        output_path = os.path.join(output_dir, "output.jpeg")
+        piantPlayersOnMap(names, xs, ys, output_path=output_path)
+
+
     text.append("----------")
+    
     text.append(f"工具版本：{TOOL_VER}")
     text.append("\nℹ 以上信息由Caramel为您播报~")
     return "\n".join(text)
+
 
 parser = argparse.ArgumentParser(description="Palworld REST API 服务器状态查询")
 parser.add_argument("--ping-threshold", type=int, default=100, help="Ping 超过阈值标记 ⚠️")
 args = parser.parse_args()
 
-@register("pal", "YourName", "一个简单的 palWorld 插件", "1.0.0")
+@register("pal", "YourName", "一个简单的 palWorld 插件", TOOL_VER)
 class MyPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
@@ -122,16 +147,30 @@ class MyPlugin(Star):
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
 
-    @filter.command("pal")
-    # —— 命令行参数 —— #
+    #@filter.command("pal")
+    #async def pal_Info(self, event: AstrMessageEvent):
+    #    """这是一个 pal world 指令"""
+    #    message_chain = event.get_messages() 
+    #    message_str = format_output(ping_threshold=args.ping_threshold)
+    #    logger.info(message_chain)
+    #    yield event.plain_result(f"{message_str}!") 
 
+    @filter.command("pal")
     async def pal(self, event: AstrMessageEvent):
         """这是一个 pal world 指令"""
-        user_name = event.get_sender_name()
-        message_chain = event.get_messages() 
-        message_str = format_output(ping_threshold=args.ping_threshold)
-        logger.info(message_chain)
-        yield event.plain_result(f"{message_str}!") 
-
+        # 获取插件目录的绝对路径
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # 设置输出图片路径
+        output_file = os.path.join(current_dir, "output.jpeg")
+    
+        # 将输出路径传递给 format_output 函数
+        message_str = format_output(ping_threshold=args.ping_threshold, output_dir=current_dir)
+    
+        # 检查图片是否存在，如果不存在则输出错误信息
+        if os.path.exists(output_file):
+            yield event.plain_result(message_str)
+            yield event.image_result(output_file) # 发送图片
+        else:
+            yield event.plain_result(f"{message_str}\n\n⚠️ 实时定位图生成失败。")
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
